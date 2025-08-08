@@ -49,53 +49,89 @@ app.use(express.urlencoded({ extended: false }));
 //as currently we can not perform post patch and delete on our brouser so we need to install posman for this
 {//one route handling get post patch and delete requests
     app.route('/api/user/:id')
+
     .get((req, res)=>{
         // how to get id from the req which i want to process ?
         const id = parseInt(req.params.id); //id type string parsed to int
         const userinfo = users.find((user) => user.id === id); //users.find((user) => user.id === id); returns a json object having id same as reqID
-        const userName = userinfo.first_name //extracting userName from that json object
-        return res.json(userName); //return type json
+        
+        if(userinfo){
+            return res.json(userinfo); //return type json
+        }
+        return res.end('no user found');
     })
     
     .post((req, res)=>{
-        const lastUser = users[users.length - 1];
-        const newUserId = parseInt(lastUser.id) + 1;
-
-        // client will send data in the body of the request
-        // we can access it using req.body
+        const reqToCreateUserWithID = parseInt(req.params.id);
+        const userFound = users.find((user)=> user.id === reqToCreateUserWithID);
+        
+        if(userFound){
+            return res.json({
+                message: `user alreadExist with user id ${reqToCreateUserWithID}!!`,
+            });
+        }
         const newUserData = req.body;
 
         //now we will append this to the users array
-        users.push({id: newUserId, ...newUserData});
+        users.push({id: reqToCreateUserWithID, ...newUserData});
 
         //we have only pushed it to the array but not saved it to the file
         fs.writeFile("./MOCK_DATA.json", JSON.stringify(users) ,(err)=>{
             return res.json({
                 message: `thanks for joining us ${newUserData.first_name}!!`,
-                userId: newUserId
+                userId: reqToCreateUserWithID
             });
         });
     })
 
     .patch((req, res) =>{
-        const userId = parseInt(req.params.id);
+        const reqToUpdateUserWithID = parseInt(req.params.id);
         const updatedUserData = req.body;
+
+        const userFound = users.find((user)=> user.id === reqToUpdateUserWithID);
         
-        users[userId-1] = updatedUserData;
-        fs.writeFile("./MOCK_DATA.json", JSON.stringify, (err)=>{
-            return res.json({
-                message: `${updatedUserData.first_name} your info is updated successfully`
+        if(userFound){
+            if(updatedUserData.id) userFound.id = parseInt(updatedUserData.id);
+            if(updatedUserData.first_name) userFound.first_name = updatedUserData.first_name;
+            if(updatedUserData.last_name) userFound.last_name = updatedUserData.last_name;
+            if(updatedUserData.email) userFound.email = updatedUserData.email;
+            if(updatedUserData.gender) userFound.gender = updatedUserData.gender;
+            if(updatedUserData.job_title) userFound.job_title = updatedUserData.job_title;
+           
+            fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err)=>{
+                return res.json({
+                    message: `${updatedUserData.first_name} your info is updated successfully`
+                });
             });
-        });
+        }
+        else{
+            return res.json({
+                message: `user not found with user id ${reqToUpdateUserWithID}. try updating existing user`
+            });
+        }
+        
+        
     })
 
     .delete((req, res) =>{
-        const userId = parseInt(req.params.id);
-        const userInfo = users.find((user)=> user.id === userId);
-
-        return res.json({
-            message: `sorry to say ${userInfo.first_name} but you are fired`
-        });
+        const reqToDeleteUserWithID = parseInt(req.params.id);
+        const userIndex = users.findIndex((user) => user.id === reqToDeleteUserWithID);
+        
+        if (userIndex !== -1) {
+            const userName = users[userIndex].first_name;
+            const newUsers = users.filter((u) => u.id !== reqToDeleteUserWithID); // removes the element in-place
+            console.log(newUsers);
+            fs.writeFile("./MOCK_DATA.json", JSON.stringify(newUsers), (err)=>{
+                return res.json({
+                    message: `${userName} your info is updated successfully`
+                });
+            });
+        }
+        else{
+            return res.json({
+                message: `no user found with user id ${reqToDeleteUserWithID}`
+            });
+        }
     });
 }
 
