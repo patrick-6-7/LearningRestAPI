@@ -1,0 +1,26 @@
+designing a jason rest api for apps
+and htm for websites
+
+GET    -> api/users                    => list of all users
+GET    -> users                        => list of all users
+
+GET    -> api/user/1                   => get user with id 1
+GET    -> user/1                       => get user with id 1
+
+GET    -> api/user/2                   => get user with id 2
+GET    -> user/2                       => get user with id 2
+
+
+we can not make this requests on our brouser brouser are only designed to execute get requests
+
+POST   -> api/user/3                   => make user with new id
+POST   -> user/3                       => make user with new id
+
+PATCH  -> api/user/1                   => edit the user with id 1
+PATCH  -> user/1                       => edit the user with id 1
+
+DELETE -> api/user/1                   => delete user with id 1
+DELETE -> user/1                       => delete user with id 1
+
+
+
